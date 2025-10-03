@@ -1,4 +1,3 @@
-```markdown
 # 📚 MCMOL System - Meteorological Data Processing and Equivalent Rainfall
 
 Automated system for processing meteorological radar data and calculating equivalent rainfall for civil protection decision support.
@@ -27,6 +26,7 @@ Peq0_Automatized.py
 ## 🔧 Initial Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/yourusername/mcmol-system.git
 cd mcmol-system
@@ -39,6 +39,7 @@ pip install -r requirements.txt
 ```
 
 **requirements.txt**:
+
 ```
 rasterio>=1.3.0
 geopandas>=0.12.0
@@ -150,6 +151,7 @@ This script verifies:
 ## 📁 Required Data Structure
 
 ### MCM Radar Archive
+
 ```
 mergingArchive/
 ├── YYYY/
@@ -159,11 +161,13 @@ mergingArchive/
 ```
 
 ### Homogeneous Zones Shapefile
+
 - **Coordinate system**: WGS84 (EPSG:4326)
 - **Required attributes**: `id` or `ZONA_IM` (numeric zone identifier)
 - **Geometries**: Valid polygons
 
 ### Curve Number Rasters
+
 - **Format**: ASCII Grid (.ASC)
 - **Naming**: Filename must end with zone number (e.g., `CN_basin_05.ASC` → zone IM-05)
 - **Coordinate system**: Consistent with zone IM shapefile
@@ -183,6 +187,7 @@ python Peq0_Automatized.py
 ### Automated Execution (Windows Task Scheduler)
 
 **Task 1: MCMOL at 08:00 (daily)**
+
 ```
 Action: Start a program
 Program: C:\Python\python.exe
@@ -191,6 +196,7 @@ Start in: C:\path\to\scripts
 ```
 
 **Task 2: Peq0 at 08:45 (daily)**
+
 ```
 Action: Start a program
 Program: C:\Python\python.exe
@@ -214,18 +220,21 @@ crontab -e
 ### MCMOL_cumulate_fixed.py
 
 **1. PNG Maps** (`DIR_OUTPUT/MCMOL_Xh.png`)
+
 - 9 cumulative maps (one per duration: 3h, 6h, 12h, 24h, 36h, 48h, 72h, 96h, 120h)
 - 150 DPI resolution
 - Color scale: White (0mm) → Blue → Yellow → Red (200mm)
 - Zone labels and boundaries overlay
 
 **2. Excel Percentile Files** (`DIR_OUTPUT/percentiles_X.xlsx`)
+
 - 9 Excel files (one per duration)
 - Structure: `IM | p50 | p75 | p95 | p99`
 - Spatial statistics per homogeneous zone
 - Values rounded to 1 decimal place
 
 **3. Notification File** (`DIR_OUTPUT/mail_output.txt`)
+
 - First line: `YES` (send notification) or `NO`
 - HTML content for Power Automate integration
 - Archive problems report (missing/corrupted files)
@@ -233,12 +242,14 @@ crontab -e
 ### Peq0_Automatized.py
 
 **1. Current File** (`DIR_OUTPUT/Peq0_current.xlsx`)
+
 - Calculated equivalent rainfall per zone
 - Structure: `IM | p50 | p75 | p95 | p99` (Peq0 values in mm)
 - Overwritten at each execution
 - Values rounded to 2 decimal places
 
 **2. Historical Archive** (`DIR_OUTPUT/YYYY/MM/Peq0_YYYYMMDD.xlsx`)
+
 - Daily copy for historicization
 - Automatic organization by year/month
 - Preserves data for trend analysis
@@ -256,6 +267,7 @@ Peq0 = M × (1 + λ × S/(S + M))
 ```
 
 Where:
+
 - **S**: Maximum potential retention (mm)
 - **CN**: Curve Number of the zone (from raster)
 - **P**: Cumulative precipitation (from MCMOL percentiles)
@@ -267,6 +279,7 @@ Where:
 ### Archive Quality Control
 
 MCMOL automatically verifies data integrity:
+
 - Checks last 120 hours of data (excluding 4 most recent hours)
 - Identifies missing, empty or corrupted files
 - Generates notification email if problems detected
@@ -275,6 +288,7 @@ MCMOL automatically verifies data integrity:
 ### CN Cache System
 
 Peq0 optimizes performance through intelligent caching:
+
 - Calculates average CN per zone only at first execution
 - Stores results in JSON cache file
 - Automatically invalidates cache if rasters are modified
@@ -311,11 +325,13 @@ Maps use a continuous color scale to represent precipitation:
 ### Verification Steps
 
 **1. Test configuration:**
+
 ```python
 python -c "from MCMOL_cumulate_fixed import config; print('Output:', config.PATH_OUTPUT)"
 ```
 
 **2. Test shapefile reading:**
+
 ```python
 import geopandas as gpd
 gdf = gpd.read_file('/path/to/Zone_IM_WGS84.shp')
@@ -323,6 +339,7 @@ print(f"Zones: {len(gdf)}, CRS: {gdf.crs}")
 ```
 
 **3. Test raster CN:**
+
 ```python
 import rasterio
 with rasterio.open('/path/to/CN_basin_05.ASC') as src:
@@ -330,6 +347,7 @@ with rasterio.open('/path/to/CN_basin_05.ASC') as src:
 ```
 
 **4. Check archive:**
+
 ```bash
 # Linux/Mac
 ls -lh /path/to/mergingArchive/$(date +%Y/%m/%d)/*.tif
@@ -343,16 +361,19 @@ dir /path/to/mergingArchive\%date:~-4%\%date:~-7,2%\%date:~-10,2%\*.tif
 ### Regular Tasks
 
 **Daily:**
+
 - Verify output files are generated
 - Check `mail_output.txt` for problems
 - Monitor disk space usage
 
 **Weekly:**
+
 - Review processing logs
 - Verify archive completeness
 - Check cache validity
 
 **Monthly:**
+
 - Archive old log files
 - Verify shapefile integrity
 - Update CN rasters if land use changed
@@ -401,12 +422,14 @@ When updating homogeneous zones:
 The system can integrate with Microsoft Power Automate for automatic email notifications:
 
 **Flow Setup:**
+
 1. **Trigger**: Monitor `mail_output.txt` file
 2. **Condition**: Check if first line = "YES"
 3. **Action**: Send email with HTML body from file content
 4. **Recipients**: Civil protection distribution list
 
 **Example Flow (JSON):**
+
 ```json
 {
   "trigger": {
@@ -441,15 +464,10 @@ zone_5_p95 = df_perc[df_perc['IM'] == 5]['p95'].values[0]
 print(f"Zone 5 - P95: {zone_5_p95:.1f} mm")
 ```
 
-## 📄 License
-
-[Specify your license here - e.g., MIT, GPL-3.0, etc.]
 
 ## 👥 Authors and Contact
 
-**Developed by:** [Your Name/Organization]
-
-**Contact:** [your.email@domain.com]
+**Developed by:** Sala Daniele
 
 **Issues:** Report bugs and request features via [GitHub Issues](https://github.com/yourusername/mcmol-system/issues)
 
@@ -468,4 +486,3 @@ print(f"Zone 5 - P95: {zone_5_p95:.1f} mm")
 ---
 
 **Note**: This system is designed for operational use in civil protection and flood risk management. It requires MCM radar data and area-specific shapefiles. For questions or support, please contact the development team.
-```
